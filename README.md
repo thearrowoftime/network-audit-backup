@@ -1,20 +1,17 @@
 # scanmedaddy
 
-> **Beta - internal / company use only**  
-> This project was built for **company internal use** (homelab / operations tooling aligned with the workplace network stack).  
+> **BETA**  
 > It is published as a **beta** reference - not a supported public product. Do not use against systems you do not own or administer.
-
-**Status:** `v0.1.0-beta` - GitHub: [@thearrowoftime/scanmedaddy](https://github.com/thearrowoftime/scanmedaddy)
 
 CLI tool for **configuration backup** of routers/switches/firewalls over SSH, **change diffing**, **standards validation**, and **detection of unsafe settings**, with **Wazuh** integration.
 
-Production / lab targets: **FortiGate 120G**, **SCALANCE XC208**, Cisco IOS + alert export to SIEM.
+Production: **FortiGate 120G**, **SCALANCE XC208**, alert export to SIEM.
 
 ## Features
 
 | Feature | Description |
-|--------|-------------|
-| **SSH backup** | FortiGate (`show full-configuration`), SCALANCE XC208 (`show running-config`), Cisco IOS/ASA |
+|-----------------------|
+| **SSH backup** | FortiGate (`show full-configuration`), SCALANCE XC208 (`show running-config`) |
 | **Versioning** | Snapshots under `backups/<device>/<timestamp>.cfg` + `index.json` |
 | **Diff** | Unified diff between backups |
 | **Audit** | Per-platform rules: any/any, weak SNMP, missing NTP/syslog, telnet, HTTP, ... |
@@ -90,8 +87,6 @@ netaudit diff fg-120g-01
    ```powershell
    netaudit audit --wazuh-syslog 192.168.1.50 --wazuh-syslog-port 514
    ```
-
-Details: [`integrations/wazuh/README.md`](integrations/wazuh/README.md).
 
 ## Audit rules (summary)
 
