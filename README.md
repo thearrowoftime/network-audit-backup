@@ -9,13 +9,16 @@ Production: **FortiGate 120G**, **SCALANCE XC208**, alert export to SIEM.
 
 ## Features
 
-| Feature | Description |
-|-----------------------|
 | **SSH backup** | FortiGate (`show full-configuration`), SCALANCE XC208 (`show running-config`) |
+
 | **Versioning** | Snapshots under `backups/<device>/<timestamp>.cfg` + `index.json` |
+
 | **Diff** | Unified diff between backups |
+
 | **Audit** | Per-platform rules: any/any, weak SNMP, missing NTP/syslog, telnet, HTTP, ... |
+
 | **Export** | Markdown + CSV |
+
 | **Wazuh** | NDJSON for the agent, syslog, optional API |
 
 ## Platforms
