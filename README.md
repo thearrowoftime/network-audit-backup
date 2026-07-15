@@ -1,31 +1,35 @@
-# Network Audit and Config Backup
+# scanmedaddy
 
-> **Beta · internal use only**  
+> **Beta - internal / company use only**  
+> This project was built for **company internal use** (homelab / operations tooling aligned with the workplace network stack).  
+> It is published as a **beta** reference - not a supported public product. Do not use against systems you do not own or administer.
 
-Narzędzie CLI do **backupu konfiguracji** routerów/switchy/firewalli po SSH, **diffowania zmian**, **walidacji standardów** i **wykrywania niebezpiecznych ustawień**, z integracją **Wazuh**.
+**Status:** `v0.1.0-beta` - GitHub: [@thearrowoftime/scanmedaddy](https://github.com/thearrowoftime/scanmedaddy)
 
-Targety produkcyjne / labowe: **FortiGate 120G**, **SCALANCE XC208**, Cisco IOS + eksport alertów do SIEM.
+CLI tool for **configuration backup** of routers/switches/firewalls over SSH, **change diffing**, **standards validation**, and **detection of unsafe settings**, with **Wazuh** integration.
 
-## Funkcje
+Production / lab targets: **FortiGate 120G**, **SCALANCE XC208**, Cisco IOS + alert export to SIEM.
 
-| Funkcja | Opis |
-|--------|------|
-| **Backup SSH** | FortiGate (`show full-configuration`), SCALANCE XC208 (`show running-config`), Cisco IOS/ASA |
-| **Wersjonowanie** | Snapshoty w `backups/<device>/<timestamp>.cfg` + `index.json` |
-| **Diff** | Unified diff między backupami |
-| **Audit** | Reguły per platforma: any/any, słabe SNMP, brak NTP/syslog, telnet, HTTP… |
+## Features
+
+| Feature | Description |
+|--------|-------------|
+| **SSH backup** | FortiGate (`show full-configuration`), SCALANCE XC208 (`show running-config`), Cisco IOS/ASA |
+| **Versioning** | Snapshots under `backups/<device>/<timestamp>.cfg` + `index.json` |
+| **Diff** | Unified diff between backups |
+| **Audit** | Per-platform rules: any/any, weak SNMP, missing NTP/syslog, telnet, HTTP, ... |
 | **Export** | Markdown + CSV |
-| **Wazuh** | NDJSON dla agenta, syslog, opcjonalnie API |
+| **Wazuh** | NDJSON for the agent, syslog, optional API |
 
-## Platformy
+## Platforms
 
-| `platform` w inventory | Urządzenie | Komenda backupu |
-|------------------------|------------|-----------------|
-| `fortigate` / `fortios` | **FortiGate 120G** (i inne FG) | `show full-configuration \| grep .` |
+| `platform` in inventory | Device | Backup command |
+|-------------------------|--------|----------------|
+| `fortigate` / `fortios` | **FortiGate 120G** (and other FG models) | `show full-configuration \| grep .` |
 | `scalance_xc` / `scalance` | **SCALANCE XC208** (XC-200) | `show running-config` |
 | `cisco_ios` / `cisco_asa` | Cisco | `show running-config` |
 
-## Szybki start (demo bez sprzętu)
+## Quick start (demo without hardware)
 
 ```powershell
 cd C:\Users\marci\Projects\network-audit-backup
@@ -44,7 +48,7 @@ netaudit audit --file samples\scalance-xc208-01.cfg --platform scalance_xc `
   --export reports\xc208-audit.md --wazuh-file reports\wazuh-netaudit.json
 ```
 
-## FortiGate 120G + SCALANCE XC208 (produkcja)
+## FortiGate 120G + SCALANCE XC208 (live devices)
 
 `inventory.yaml`:
 
@@ -55,7 +59,7 @@ devices:
     device_type: firewall
     platform: fortigate
     username: admin
-    password: "sekret"
+    password: "CHANGE_ME"
     port: 22
 
   - name: scalance-xc208-01
@@ -63,7 +67,7 @@ devices:
     device_type: switch
     platform: scalance_xc
     username: admin
-    password: "sekret"
+    password: "CHANGE_ME"
     port: 22
 ```
 
@@ -76,30 +80,30 @@ netaudit diff fg-120g-01
 
 ## Wazuh
 
-1. Audyt zapisuje eventy NDJSON:
+1. Audit writes NDJSON events:
    ```powershell
    netaudit audit --wazuh-file reports\wazuh-netaudit.json
    ```
-2. Na agencie Wazuh dodaj snippet z `integrations/wazuh/ossec-localfile.conf.snippet` i zrestartuj agenta.
-3. Na managerze wklej reguły z `integrations/wazuh/local_rules.xml` do `local_rules.xml`, zrestartuj manager.
-4. Opcjonalnie syslog:
+2. On the Wazuh agent, add the snippet from `integrations/wazuh/ossec-localfile.conf.snippet` and restart the agent.
+3. On the manager, merge rules from `integrations/wazuh/local_rules.xml` into `local_rules.xml`, then restart the manager.
+4. Optional syslog:
    ```powershell
    netaudit audit --wazuh-syslog 192.168.1.50 --wazuh-syslog-port 514
    ```
 
-Szczegóły: [`integrations/wazuh/README.md`](integrations/wazuh/README.md).
+Details: [`integrations/wazuh/README.md`](integrations/wazuh/README.md).
 
-## Reguły audytu (skrót)
+## Audit rules (summary)
 
-**FortiGate:** `FG-POLICY-ANY-ANY`, `FG-SNMP-WEAK`, `FG-NTP-MISSING`, `FG-SYSLOG-MISSING`, `FG-TELNET-ADMIN`, `FG-HTTP-ADMIN`…
+**FortiGate:** `FG-POLICY-ANY-ANY`, `FG-SNMP-WEAK`, `FG-NTP-MISSING`, `FG-SYSLOG-MISSING`, `FG-TELNET-ADMIN`, `FG-HTTP-ADMIN`, ...
 
-**SCALANCE XC208:** `SC-ACL-PERMIT-ANY`, `SC-SNMP-WEAK`, `SC-NTP-MISSING`, `SC-SYSLOG-MISSING`, `SC-TELNET-ENABLED`…
+**SCALANCE XC208:** `SC-ACL-PERMIT-ANY`, `SC-SNMP-WEAK`, `SC-NTP-MISSING`, `SC-SYSLOG-MISSING`, `SC-TELNET-ENABLED`, ...
 
-**Cisco:** `ACL-PERMIT-ANY`, słabe SNMP, brak NTP/syslog, telnet, type 7, VTY bez ACL…
+**Cisco:** `ACL-PERMIT-ANY`, weak SNMP, missing NTP/syslog, telnet, type 7, VTY without ACL, ...
 
-Pliki: `netaudit/rules/{default,fortigate,scalance}.yaml`
+Rule files: `netaudit/rules/{default,fortigate,scalance}.yaml`
 
-## Testy
+## Tests
 
 ```powershell
 pytest -q
