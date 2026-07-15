@@ -1,10 +1,6 @@
 # Network Audit and Config Backup
 
-> **Beta · internal / company use only**  
-> This project was built for **company internal use** (homelab / operations tooling aligned with workplace network stack).  
-> It is published as a **beta** reference — not a supported public product. Do not use against systems you do not own or administer.
-
-**Status:** `v0.1.0-beta` · GitHub: [@thearrowoftime](https://github.com/thearrowoftime)
+> **Beta · internal use only**  
 
 Narzędzie CLI do **backupu konfiguracji** routerów/switchy/firewalli po SSH, **diffowania zmian**, **walidacji standardów** i **wykrywania niebezpiecznych ustawień**, z integracją **Wazuh**.
 
@@ -108,7 +104,3 @@ Pliki: `netaudit/rules/{default,fortigate,scalance}.yaml`
 ```powershell
 pytest -q
 ```
-
-## Licencja
-
-MIT
