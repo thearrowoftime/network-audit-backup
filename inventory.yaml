@@ -1,0 +1,28 @@
+devices:
+  - name: fg-120g-01
+    host: 192.168.10.1
+    device_type: firewall
+    platform: fortigate
+    username: admin
+    password: CHANGE_ME
+    port: 22
+    tags: [edge, fortigate, lab]
+
+  - name: scalance-xc208-01
+    host: 192.168.20.10
+    device_type: switch
+    platform: scalance_xc
+    username: admin
+    password: CHANGE_ME
+    port: 22
+    tags: [ot, siemens, lab]
+
+  - name: core-sw-01
+    host: 192.168.1.10
+    device_type: switch
+    platform: cisco_ios
+    username: admin
+    password: CHANGE_ME
+    enable_password: CHANGE_ME
+    port: 22
+    tags: [core, lab]

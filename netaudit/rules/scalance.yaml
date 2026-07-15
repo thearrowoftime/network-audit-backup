@@ -1,0 +1,100 @@
+# Siemens SCALANCE XC208 / XC-200 series CLI audit rules
+
+rules:
+  - id: SC-ACL-PERMIT-ANY
+    title: SCALANCE overly permissive ACL (permit any any)
+    severity: critical
+    type: regex
+    platforms: [scalance, scalance_xc]
+    patterns:
+      - '(?i)^\s*permit\s+(ip\s+)?any\s+any\b'
+      - '(?i)^\s*access-list\s+\S+\s+permit\s+(ip\s+)?any\s+any\b'
+    remediation: >
+      Restrict ACLs to required industrial / management subnets only.
+
+  - id: SC-SNMP-WEAK
+    title: SCALANCE weak/default SNMP community
+    severity: high
+    type: regex
+    platforms: [scalance, scalance_xc]
+    patterns:
+      - '(?i)^\s*snmp-server\s+community\s+(public|private|siemens|admin|snmp)\b'
+      - '(?i)^\s*snmp\s+community\s+(public|private|siemens)\b'
+      - '(?i)^\s*set\s+community\s+(public|private)\b'
+    remediation: >
+      Use SNMPv3 or a strong community restricted to the management VLAN / NMS.
+
+  - id: SC-SNMP-MISSING
+    title: SCALANCE SNMP not configured
+    severity: low
+    type: missing
+    platforms: [scalance, scalance_xc]
+    patterns:
+      - '(?i)^\s*snmp-server\b'
+      - '(?i)^\s*snmp\s+community\b'
+      - '(?i)^\s*config\s+snmp\b'
+    remediation: >
+      Configure SNMP for monitoring (prefer v3) or document intentional omission.
+
+  - id: SC-NTP-MISSING
+    title: SCALANCE NTP / SNTP not configured
+    severity: medium
+    type: missing
+    platforms: [scalance, scalance_xc]
+    patterns:
+      - '(?i)^\s*ntp\s+server\b'
+      - '(?i)^\s*sntp\s+server\b'
+      - '(?i)^\s*sntp\s+client\b'
+      - '(?i)^\s*set\s+sntp'
+    remediation: >
+      Configure SNTP/NTP against plant time servers so logs correlate with Wazuh/SIEM.
+
+  - id: SC-SYSLOG-MISSING
+    title: SCALANCE syslog not configured
+    severity: medium
+    type: missing
+    platforms: [scalance, scalance_xc]
+    patterns:
+      - '(?i)^\s*logging\s+host\b'
+      - '(?i)^\s*logging\s+server\b'
+      - '(?i)^\s*syslog\s+server\b'
+      - '(?i)^\s*set\s+syslog'
+    remediation: >
+      Point syslog at the Wazuh manager / syslog collector used for OT monitoring.
+
+  - id: SC-TELNET-ENABLED
+    title: SCALANCE telnet / insecure management transport
+    severity: high
+    type: regex
+    platforms: [scalance, scalance_xc]
+    patterns:
+      - '(?i)^\s*transport\s+input\s+.*\btelnet\b'
+      - '(?i)^\s*transport\s+input\s+all\b'
+      - '(?i)^\s*telnet\s+server\s+enable\b'
+      - '(?i)telnet.*enable'
+    remediation: >
+      Disable telnet; use SSH only for CLI management on XC208.
+
+  - id: SC-HTTP-ENABLED
+    title: SCALANCE HTTP management enabled
+    severity: medium
+    type: regex
+    platforms: [scalance, scalance_xc]
+    patterns:
+      - '(?i)^\s*ip\s+http\s+server\b'
+      - '(?i)http\s+server\s+enable'
+      - '(?i)^\s*web\s+server\s+enable\b'
+    remediation: >
+      Prefer HTTPS WBM only, restricted to management VLAN. Disable plain HTTP.
+
+  - id: SC-NO-PASSWORD-COMPLEXITY
+    title: SCALANCE may lack hardened admin password settings
+    severity: low
+    type: missing
+    platforms: [scalance, scalance_xc]
+    patterns:
+      - '(?i)password\s+complexity'
+      - '(?i)username\s+\S+\s+privilege'
+      - '(?i)aaa\s+new-model'
+    remediation: >
+      Enforce strong local passwords or central AAA for switch management.

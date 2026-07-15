@@ -1,0 +1,16 @@
+backups/
+reports/
+*.egg-info/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+dist/
+build/
+inventory.local.yaml
+*.log
+.netaudit/
+.DS_Store
+Thumbs.db

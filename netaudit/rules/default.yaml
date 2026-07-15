@@ -1,0 +1,145 @@
+# Cisco IOS / ASA style rules (also used as generic fallback for cisco_ios family)
+
+rules:
+  - id: ACL-PERMIT-ANY
+    title: Overly permissive ACL (permit any any)
+    severity: critical
+    type: regex
+    platforms: [cisco_ios, cisco_asa, generic]
+    patterns:
+      - '(?i)^\s*permit\s+(ip|ipx)?\s*any\s+any\b'
+      - '(?i)^\s*access-list\s+\d+\s+permit\s+(ip\s+)?any\s+any\b'
+      - '(?i)^\s*permit\s+ip\s+any\s+any\b'
+    remediation: >
+      Replace with least-privilege ACEs. Prefer specific source/destination
+      and protocols. Add explicit deny + logging at the end of the ACL.
+
+  - id: ACL-PERMIT-ANY-EXTENDED
+    title: Extended ACL permits any to any
+    severity: critical
+    type: regex
+    platforms: [cisco_ios, cisco_asa, generic]
+    patterns:
+      - '(?i)^\s*permit\s+\S+\s+any\s+any(\s|$)'
+    remediation: >
+      Narrow the ACE. Avoid 'permit <proto> any any' on production edges.
+
+  - id: SNMP-WEAK-COMMUNITY
+    title: Weak or default SNMP community
+    severity: high
+    type: regex
+    platforms: [cisco_ios, cisco_asa, generic, juniper]
+    patterns:
+      - '(?i)^\s*snmp-server\s+community\s+(public|private|cisco|admin|snmp)\b'
+    remediation: >
+      Use SNMPv3 with authPriv. If v2c is required, use a long random community,
+      restrict with ACL, and avoid RO/RW defaults like public/private.
+
+  - id: SNMP-RW
+    title: SNMP read-write community present
+    severity: high
+    type: regex
+    platforms: [cisco_ios, cisco_asa, generic]
+    patterns:
+      - '(?i)^\s*snmp-server\s+community\s+\S+\s+RW\b'
+    remediation: >
+      Prefer SNMPv3. If RW is needed, lock it with a management ACL and strong community.
+
+  - id: SNMP-MISSING
+    title: No SNMP configuration found
+    severity: low
+    type: missing
+    platforms: [cisco_ios, cisco_asa, generic]
+    patterns:
+      - '(?i)^\s*snmp-server\b'
+      - '(?i)^\s*snmp\s+community\b'
+    remediation: >
+      Configure SNMPv3 for monitoring, or document intentional omission.
+
+  - id: NTP-MISSING
+    title: NTP not configured
+    severity: medium
+    type: missing
+    platforms: [cisco_ios, cisco_asa, generic]
+    patterns:
+      - '(?i)^\s*ntp\s+server\b'
+      - '(?i)^\s*ntp\s+peer\b'
+      - '(?i)^\s*sntp\s+server\b'
+    remediation: >
+      Configure at least two trusted NTP servers.
+
+  - id: SYSLOG-MISSING
+    title: Syslog / logging host not configured
+    severity: medium
+    type: missing
+    platforms: [cisco_ios, cisco_asa, generic]
+    patterns:
+      - '(?i)^\s*logging\s+host\b'
+      - '(?i)^\s*logging\s+\d+\.\d+\.\d+\.\d+'
+      - '(?i)^\s*logging\s+server\b'
+    remediation: >
+      Point logging to a central syslog / Wazuh manager and set severity levels.
+
+  - id: TELNET-ENABLED
+    title: Telnet / cleartext VTY transport
+    severity: high
+    type: regex
+    platforms: [cisco_ios, cisco_asa, generic]
+    patterns:
+      - '(?i)^\s*transport\s+input\s+.*\btelnet\b'
+      - '(?i)^\s*transport\s+input\s+all\b'
+    remediation: >
+      Use 'transport input ssh' only. Disable telnet on all VTY lines.
+
+  - id: HTTP-SERVER
+    title: HTTP/HTTPS device management server enabled
+    severity: medium
+    type: regex
+    platforms: [cisco_ios, cisco_asa, generic]
+    patterns:
+      - '(?i)^\s*ip\s+http\s+server\b'
+      - '(?i)^\s*ip\s+http\s+secure-server\b'
+    remediation: >
+      Disable 'ip http server' unless required. Prefer SSH/HTTPS with ACL if GUI is needed.
+
+  - id: ENABLE-PASSWORD-WEAK
+    title: Weak enable secret / password type 7
+    severity: high
+    type: regex
+    platforms: [cisco_ios, cisco_asa, generic]
+    patterns:
+      - '(?i)^\s*enable\s+password\b'
+      - '(?i)\bpassword\s+7\s+\S+'
+      - '(?i)^\s*username\s+\S+.*\bpassword\s+7\b'
+    remediation: >
+      Use 'enable secret' (type 5/8/9). Prefer type 8/9. Avoid type 7.
+
+  - id: CDP-ENABLED
+    title: CDP running (information disclosure)
+    severity: low
+    type: presence_default
+    platforms: [cisco_ios, cisco_asa, generic]
+    patterns:
+      - '(?i)^\s*cdp\s+run\b'
+    absent_ok:
+      - '(?i)^\s*no\s+cdp\s+run\b'
+    remediation: >
+      Disable CDP globally or on untrusted interfaces: 'no cdp run' / 'no cdp enable'.
+
+  - id: NO-SERVICE-PASSWORD-ENCRYPT
+    title: service password-encryption missing
+    severity: medium
+    type: missing
+    platforms: [cisco_ios, cisco_asa, generic]
+    patterns:
+      - '(?i)^\s*service\s+password-encryption\b'
+    remediation: >
+      Enable 'service password-encryption' (still prefer secrets over type 7).
+
+  - id: VTY-NO-ACL
+    title: VTY lines without access-class
+    severity: medium
+    type: vty_no_acl
+    platforms: [cisco_ios, cisco_asa, generic]
+    remediation: >
+      Apply 'access-class <ACL> in' on line vty 0 4 to restrict management access.

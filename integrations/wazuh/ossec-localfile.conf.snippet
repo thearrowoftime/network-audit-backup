@@ -1,0 +1,17 @@
+# Drop into Wazuh agent ossec.conf (or shared agent config)
+# Monitors netaudit NDJSON findings for FortiGate / SCALANCE / Cisco audits.
+
+<ossec_config>
+  <localfile>
+    <log_format>json</log_format>
+    <!-- Windows example — adjust to your path -->
+    <location>C:\Users\marci\Projects\network-audit-backup\reports\wazuh-netaudit.json</location>
+  </localfile>
+
+  <!-- Linux example:
+  <localfile>
+    <log_format>json</log_format>
+    <location>/var/log/netaudit/wazuh-netaudit.json</location>
+  </localfile>
+  -->
+</ossec_config>

@@ -1,0 +1,96 @@
+# FortiOS / FortiGate 120G (and other FortiGate) audit rules
+
+rules:
+  - id: FG-POLICY-ANY-ANY
+    title: FortiGate firewall policy accepts all to all
+    severity: critical
+    type: fortigate_any_any
+    platforms: [fortigate, fortios]
+    remediation: >
+      Replace any/any accept policies with least-privilege address objects and
+      services. Prefer explicit deny at the bottom. Review policy order.
+
+  - id: FG-SNMP-WEAK
+    title: FortiGate weak/default SNMP community
+    severity: high
+    type: regex
+    platforms: [fortigate, fortios]
+    patterns:
+      - '(?i)^\s*set\s+community\s+"?(public|private|fortinet|admin|snmp)"?\b'
+      - '(?i)^\s*set\s+name\s+"?(public|private|fortinet|admin|snmp)"?\b'
+    remediation: >
+      Use SNMPv3 with authPriv, or a strong unique community with trusted hosts.
+
+  - id: FG-SNMP-MISSING
+    title: FortiGate SNMP not configured
+    severity: low
+    type: missing
+    platforms: [fortigate, fortios]
+    patterns:
+      - '(?i)^\s*config\s+system\s+snmp\s+(sysinfo|community|user)\b'
+      - '(?i)^\s*config\s+system\s+snmp\b'
+    remediation: >
+      Configure SNMPv3 for monitoring, or document intentional omission.
+
+  - id: FG-NTP-MISSING
+    title: FortiGate NTP not configured
+    severity: medium
+    type: missing
+    platforms: [fortigate, fortios]
+    patterns:
+      - '(?i)^\s*config\s+system\s+ntp\b'
+    remediation: >
+      Under config system ntp, set ntpsync enable and at least two NTP servers.
+
+  - id: FG-SYSLOG-MISSING
+    title: FortiGate syslog / fortianalyzer logging not configured
+    severity: medium
+    type: missing
+    platforms: [fortigate, fortios]
+    patterns:
+      - '(?i)^\s*config\s+log\s+syslogd'
+      - '(?i)^\s*config\s+log\s+fortianalyzer'
+    remediation: >
+      Enable syslogd (or FortiAnalyzer) and point it at your Wazuh / SIEM collector.
+      Example: config log syslogd setting / set status enable / set server <wazuh-ip>.
+
+  - id: FG-TELNET-ADMIN
+    title: FortiGate allows telnet administrative access
+    severity: high
+    type: regex
+    platforms: [fortigate, fortios]
+    patterns:
+      - '(?i)^\s*set\s+allowaccess\s+.*\btelnet\b'
+    remediation: >
+      Remove telnet from allowaccess. Prefer HTTPS + SSH only, restricted by trusted hosts.
+
+  - id: FG-HTTP-ADMIN
+    title: FortiGate allows cleartext HTTP admin access
+    severity: medium
+    type: regex
+    platforms: [fortigate, fortios]
+    patterns:
+      - '(?i)^\s*set\s+allowaccess\s+.*\bhttp\b'
+    remediation: >
+      Remove http from allowaccess; keep https and ssh. Restrict trusted hosts.
+
+  - id: FG-ADMIN-TRUSTHOST-MISSING
+    title: FortiGate admin without trusthost restriction
+    severity: medium
+    type: missing
+    platforms: [fortigate, fortios]
+    patterns:
+      - '(?i)^\s*set\s+trusthost'
+    remediation: >
+      Set trusthost1/2 on admin accounts to management subnets only.
+
+  - id: FG-SSL-VPN-ANY
+    title: FortiGate SSL-VPN portal potentially wide open
+    severity: high
+    type: regex
+    platforms: [fortigate, fortios]
+    patterns:
+      - '(?i)^\s*set\s+tunnel-mode\s+enable'
+    remediation: >
+      Ensure SSL-VPN source-address is restricted and MFA is enabled where possible.
+      Review vpn ssl settings and firewall policies carefully.
